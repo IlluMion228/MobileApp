@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp") version "2.0.0-1.0.21"
 }
 
 android {
@@ -57,4 +58,20 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    val room_version = "2.6.1"
+    val nav_version = "2.8.3"
+
+    // Room Database
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+    ksp("androidx.room:room-compiler:$room_version") // Трябва да имате KSP плъгин, ако не - използвайте kapt
+
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:$nav_version")
+
+    // ViewModel for Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+
+    // Material Icons Extended (за икони като Add, Delete)
+    implementation("androidx.compose.material:material-icons-extended:1.7.4")
 }
