@@ -1,0 +1,56 @@
+package com.example.noteapp.uiView
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.noteapp.NoteApplication
+import com.example.noteapp.data.Note
+import com.example.noteapp.data.NoteRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
+
+    val notes: StateFlow<List<Note>> = repository.allNotes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _currentNote = MutableStateFlow<Note?>(null)
+    val currentNote: StateFlow<Note?> = _currentNote
+
+    fun loadNoteById(id: Int) {
+        viewModelScope.launch {
+            if (id != -1) {
+                _currentNote.value = repository.getNote(id)
+            } else {
+                _currentNote.value = null
+            }
+        }
+    }
+
+    fun saveNote(title: String, content: String, id: Int = 0) {
+        viewModelScope.launch {
+            val noteId = if (id == -1) 0 else id
+            repository.insertNote(Note(id = noteId, title = title, content = content))
+        }
+    }
+
+    fun deleteNote(note: Note) {
+        viewModelScope.launch {
+            repository.deleteNote(note)
+        }
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as NoteApplication)
+                NoteViewModel(application.repository)
+            }
+        }
+    }
+}
