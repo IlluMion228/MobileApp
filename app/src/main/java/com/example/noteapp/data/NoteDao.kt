@@ -1,8 +1,8 @@
 package com.example.noteapp.data
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
-
- interface NoteDao {
+@Dao
+interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY timestamp DESC")
     fun getAllNotes(): Flow<List<Note>>
 
