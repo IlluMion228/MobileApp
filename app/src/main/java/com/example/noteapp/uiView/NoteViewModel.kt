@@ -13,15 +13,29 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.flow.combine
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
-
+    private val _searchText = MutableStateFlow("")
+    val searchText: StateFlow<String> = _searchText
     val notes: StateFlow<List<Note>> = repository.allNotes
+        .combine(_searchText) { notes, text ->
+            if (text.isBlank()) {
+                notes
+            } else {
+                notes.filter {
+                    it.title.contains(text, ignoreCase = true) ||
+                            it.content.contains(text, ignoreCase = true)
+                }
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _currentNote = MutableStateFlow<Note?>(null)
     val currentNote: StateFlow<Note?> = _currentNote
 
+    fun onSearchTextChange(text: String) {
+        _searchText.value = text
+    }
     fun loadNoteById(id: Int) {
         viewModelScope.launch {
             if (id != -1) {

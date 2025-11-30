@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.text.SimpleDateFormat
 import java.util.Date
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,20 +36,51 @@ fun HomeScreen(
     viewModel: NoteViewModel = viewModel(factory = NoteViewModel.Factory)
 ) {
     val notes by viewModel.notes.collectAsState()
+    val searchText by viewModel.searchText.collectAsState()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "My Notes",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            "My Notes",
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
                     )
+                )
+
+
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = viewModel::onSearchTextChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                placeholder = { Text("Търсене...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Търсене") },
+                trailingIcon = {
+                    if (searchText.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.onSearchTextChange("") }) {
+                            Icon(Icons.Default.Close, contentDescription = "Изчисти")
+                        }
+                    }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                shape = RoundedCornerShape(24.dp),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -60,8 +93,10 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        if (notes.isEmpty()) {
-            EmptyState(modifier = Modifier.padding(innerPadding))
+        if (notes.isEmpty() && searchText.isEmpty()) {
+            EmptyState(modifier = Modifier.padding(innerPadding), message = "Няма бележки")
+        } else if (notes.isEmpty() && searchText.isNotEmpty()) {
+            EmptyState(modifier = Modifier.padding(innerPadding), message = "Няма намерени резултати")
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -70,12 +105,12 @@ fun HomeScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(notes) { note ->
+                items(notes, key = { it.id }) { note ->
                     NoteCard(
                         note = note,
                         onClick = { onNavigateToEdit(note.id) },
                         onDelete = { viewModel.deleteNote(note) },
-                        onToggleDone = { viewModel.toggleNoteDone(note) } // Свързваме чекбокса
+                        onToggleDone = { viewModel.toggleNoteDone(note) }
                     )
                 }
             }
@@ -177,7 +212,7 @@ fun NoteCard(
 }
 
 @Composable
-fun EmptyState(modifier: Modifier = Modifier) {
+fun EmptyState(modifier: Modifier = Modifier, message: String = "Няма бележки") {
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -190,8 +225,20 @@ fun EmptyState(modifier: Modifier = Modifier) {
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Няма бележки", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-        Text("Натиснете + за да добавите", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+
+        Text(
+            text = message,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+
+        if (message == "Няма бележки") {
+            Text(
+                text = "Натиснете + за да добавите",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        }
     }
 }
 
