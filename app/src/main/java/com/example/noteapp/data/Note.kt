@@ -10,5 +10,6 @@ data class Note(
     val title: String,
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val isDone: Boolean = false
+    val isDone: Boolean = false,
+    val imagePath: String? = null
 )

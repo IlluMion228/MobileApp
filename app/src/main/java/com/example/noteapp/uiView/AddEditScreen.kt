@@ -22,6 +22,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.noteapp.utils.ShareUtils
+import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +65,24 @@ fun AddEditScreen(
 
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var currentPhotoPath by remember { mutableStateOf<String?>(null) }
+
+    fun createImageFile(): File {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir: File? = context.getExternalFilesDir(null)
+        return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir).apply {
+            currentPhotoPath = absolutePath
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            imageUri = Uri.fromFile(File(currentPhotoPath!!))
+        }
+    }
 
     LaunchedEffect(noteId) {
         viewModel.loadNoteById(noteId)
@@ -44,6 +92,10 @@ fun AddEditScreen(
         currentNote?.let {
             title = it.title
             content = it.content
+            it.imagePath?.let { path ->
+                currentPhotoPath = path
+                imageUri = Uri.fromFile(File(path))
+            }
         }
     }
 
@@ -57,19 +109,29 @@ fun AddEditScreen(
                     }
                 },
                 actions = {
+                    // БУТОН ЗА КАМЕРА
+                    IconButton(onClick = {
+                        val photoFile = createImageFile()
+                        val photoURI: Uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.provider",
+                            photoFile
+                        )
+                        cameraLauncher.launch(photoURI)
+                    }) {
+                        Icon(Icons.Default.CameraAlt, "Снимай")
+                    }
+
                     if (title.isNotEmpty() || content.isNotEmpty()) {
-                        IconButton(onClick = {
-                            ShareUtils.shareNote(context, title, content)
-                        }) {
+                        IconButton(onClick = { ShareUtils.shareNote(context, title, content) }) {
                             Icon(Icons.Default.Share, "Сподели")
                         }
                     }
-                    // Бутон "Запиши" горе в лентата (по-удобно)
                     IconButton(onClick = {
                         if (title.isBlank()) {
                             Toast.makeText(context, "Заглавието не може да е празно", Toast.LENGTH_SHORT).show()
                         } else {
-                            viewModel.saveNote(title, content, noteId)
+                            viewModel.saveNote(title, content, noteId, currentPhotoPath)
                             navigateBack()
                         }
                     }) {
@@ -87,8 +149,35 @@ fun AddEditScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 20.dp)
-                .background(MaterialTheme.colorScheme.surface) // Бял/Тъмен фон
+                .verticalScroll(rememberScrollState()) // Позволяваме скролване, ако снимката е голяма
+                .background(MaterialTheme.colorScheme.surface)
         ) {
+            // ПОКАЗВАНЕ НА СНИМКАТА (Ако има)
+            imageUri?.let { uri ->
+                Box(modifier = Modifier.fillMaxWidth().height(250.dp)) {
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = "Note Image",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    // Бутон за махане на снимката
+                    IconButton(
+                        onClick = {
+                            imageUri = null
+                            currentPhotoPath = null
+                        },
+                        modifier = Modifier.align(Alignment.TopEnd).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape)
+                    ) {
+                        Icon(Icons.Default.Delete, "Remove Image", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Поле за Заглавие
             Box(modifier = Modifier.padding(vertical = 10.dp)) {
                 if (title.isEmpty()) {
                     Text(
@@ -115,6 +204,7 @@ fun AddEditScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Поле за Съдържание
             Box(modifier = Modifier.fillMaxSize()) {
                 if (content.isEmpty()) {
                     Text(

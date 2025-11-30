@@ -46,10 +46,14 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
 
-    fun saveNote(title: String, content: String, id: Int = 0) {
+    fun saveNote(title: String, content: String, id: Int = 0, imagePath: String? = null) {
         viewModelScope.launch {
             val noteId = if (id == -1) 0 else id
-            repository.insertNote(Note(id = noteId, title = title, content = content))
+            repository.insertNote(Note(
+                id = noteId,
+                title = title,
+                content = content,
+                imagePath = imagePath ))
         }
     }
 

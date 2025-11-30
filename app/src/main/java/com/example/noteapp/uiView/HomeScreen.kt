@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import coil.compose.AsyncImage
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -198,7 +199,19 @@ fun NoteCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-
+                if (note.imagePath != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Показваме малка версия на снимката
+                    AsyncImage(
+                        model = note.imagePath,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
