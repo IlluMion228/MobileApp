@@ -44,7 +44,11 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
             repository.deleteNote(note)
         }
     }
-
+    fun toggleNoteDone(note: Note) {
+        viewModelScope.launch {
+            repository.insertNote(note.copy(isDone = !note.isDone))
+        }
+    }
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

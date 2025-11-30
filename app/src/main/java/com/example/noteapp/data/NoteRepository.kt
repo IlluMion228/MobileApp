@@ -2,19 +2,19 @@ package com.example.noteapp.data
 
 import kotlinx.coroutines.flow.Flow
 
-class NoteRepository(private val noteDao: NoteDao) {
+open class NoteRepository(private val noteDao: NoteDao) {
 
-    val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
+    open val allNotes: Flow<List<Note>> = noteDao.getAllNotes()
 
-    suspend fun getNote(id: Int): Note? {
+    open suspend fun getNote(id: Int): Note? {
         return noteDao.getNoteById(id)
     }
 
-    suspend fun insertNote(note: Note) {
+    open suspend fun insertNote(note: Note) {
         noteDao.insertNote(note)
     }
 
-    suspend fun deleteNote(note: Note) {
+    open suspend fun deleteNote(note: Note) {
         noteDao.deleteNote(note)
     }
 }
