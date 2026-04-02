@@ -8,12 +8,14 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.noteapp.NoteApplication
 import com.example.noteapp.data.Note
 import com.example.noteapp.data.NoteRepository
+import com.example.noteapp.utils.GeminiAiHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
+
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     private val _searchText = MutableStateFlow("")
     val searchText: StateFlow<String> = _searchText
@@ -33,9 +35,16 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     private val _currentNote = MutableStateFlow<Note?>(null)
     val currentNote: StateFlow<Note?> = _currentNote
 
+    private val _aiResult = MutableStateFlow<String?>(null)
+    val aiResult: StateFlow<String?> = _aiResult
+
+    private val _isAiLoading = MutableStateFlow(false)
+    val isAiLoading: StateFlow<Boolean> = _isAiLoading
+
     fun onSearchTextChange(text: String) {
         _searchText.value = text
     }
+
     fun loadNoteById(id: Int) {
         viewModelScope.launch {
             if (id != -1) {
@@ -62,11 +71,35 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
             repository.deleteNote(note)
         }
     }
+
     fun toggleNoteDone(note: Note) {
         viewModelScope.launch {
             repository.insertNote(note.copy(isDone = !note.isDone))
         }
     }
+
+    fun summarizeNote(content: String) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            val summary = GeminiAiHelper.summarizeNote(content)
+            _aiResult.value = summary
+            _isAiLoading.value = false
+        }
+    }
+
+    fun improveNote(content: String) {
+        viewModelScope.launch {
+            _isAiLoading.value = true
+            val improved = GeminiAiHelper.improveNote(content)
+            _aiResult.value = improved
+            _isAiLoading.value = false
+        }
+    }
+
+    fun clearAiResult() {
+        _aiResult.value = null
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

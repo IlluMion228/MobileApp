@@ -7,14 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.noteapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.noteapp"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -76,6 +74,9 @@ dependencies {
     // ViewModel for Compose
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
 
-    // Material Icons Extended (за икони като Add, Delete)
+    // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.7.4")
+
+    // Gemini AI
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 }
