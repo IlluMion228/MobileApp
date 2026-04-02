@@ -8,7 +8,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.noteapp.NoteApplication
 import com.example.noteapp.data.Note
 import com.example.noteapp.data.NoteRepository
-import com.example.noteapp.utils.GeminiAiHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

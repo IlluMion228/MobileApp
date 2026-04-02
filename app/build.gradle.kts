@@ -76,7 +76,4 @@ dependencies {
 
     // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.7.4")
-
-    // Gemini AI
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 }
