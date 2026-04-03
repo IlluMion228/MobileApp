@@ -24,7 +24,6 @@
 1. Клонирайте хранилището: `git clone <repo-url>`
 2. Отворете проекта в **Android Studio (Ladybug или по-нова)**.
 3. Изчакайте Gradle синхронизацията.
-4. Добавете вашия Gemini API ключ в `app/src/main/java/com/example/noteapp/utils/GeminiAiHelper.kt`.
 5. Стартирайте приложението на емулатор или реално устройство (API 24+).
 
 ## 📄 Документация
